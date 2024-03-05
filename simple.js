@@ -1,7 +1,4 @@
 const fs = require("fs");
-const request = require("request");
-const { get } = request;
-const config = require("./config.json");
 
 // "YYYYMMDD" 형식의 문자열을 Date 객체로 변환하는 함수
 function parseDate(dateString) {
@@ -69,7 +66,8 @@ END:VALARM\n`;
     return ics;
 }
 
-
+// 나이스에서 받아온 학사일정 JSON 데이터
+const jsonData = {};
 
 // JSON 데이터를 ICS로 변환
 const icsData = convertToICS(jsonData);
