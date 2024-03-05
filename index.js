@@ -69,7 +69,32 @@ END:VALARM\n`;
     return ics;
 }
 
+function getSchoolSchedule() {
+    const optionForSchedule = {
+        uri: `https://open.neis.go.kr/hub/SchoolSchedule`,
+        qs: {
+            KEY: config.neisKey,
+            Type: "json",
+            ATPT_OFCDC_SC_CODE: config.ATPT_OFCDC_SC_CODE,
+            SD_SCHUL_CODE: config.SD_SCHUL_CODE,
+            // AA_YMD: new Date().toISOString().slice(0, 10).replace(/-/g, ""),
+            // AA_YMD: 20240304,
+            MLSV_FROM_YMD: new Date().toISOString().slice(0, 4).replace(/-/g) + "0101",
+            MLSV_TO_YMD: String(Number(new Date().toISOString().slice(0, 4).replace(/-/g)) + 1) + "0101",
+            pSize: 1000,
+        },
+    };
+    get(optionForSchedule, (err, res, body) => {
+        if (err) {
+            console.log(err);
+            return;
+        }
+        const jsonData = JSON.parse(body);
+        return jsonData;
+    });
+}
 
+const jsonData = getSchoolSchedule();
 
 // JSON 데이터를 ICS로 변환
 const icsData = convertToICS(jsonData);
