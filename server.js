@@ -124,7 +124,7 @@ app.get("/", (req, res) => {
     const ATPT_OFCDC_SC_CODE = req.query.ATPT_OFCDC_SC_CODE;
     const SD_SCHUL_CODE = req.query.SD_SCHUL_CODE;
     if (!ATPT_OFCDC_SC_CODE || !SD_SCHUL_CODE) {
-        res.send("시도교육청 코드와 학교 코드를 입력해주세요. 예) /api/calendar/school?ATPT_OFCDC_SC_CODE=C10&SD_SCHUL_CODE=7150658");
+        res.send("시도교육청 코드와 학교 코드를 입력해주세요. 예) /?ATPT_OFCDC_SC_CODE=C10&SD_SCHUL_CODE=7150658");
         return;
     }
     console.log(ATPT_OFCDC_SC_CODE, SD_SCHUL_CODE);
