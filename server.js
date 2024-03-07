@@ -70,7 +70,7 @@ END:VALARM\n`;
             });
         }
     });
-
+    ics += `END:VCALENDAR`;
     return ics;
 }
 
