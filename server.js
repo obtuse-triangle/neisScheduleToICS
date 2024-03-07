@@ -165,7 +165,7 @@ app.get("/school", (req, res) => {
 
 app.get("/bssm.ics", (req, res) => {
     // redirect to /school?ATPT_OFCDC_SC_CODE=C10&SD_SCHUL_CODE=7150658
-    res.redirect("/school?ATPT_OFCDC_SC_CODE=C10&SD_SCHUL_CODE=7150658");
+    res.redirect("/api/calendar/school?ATPT_OFCDC_SC_CODE=C10&SD_SCHUL_CODE=7150658");
 });
 
 app.listen(port, () => {
