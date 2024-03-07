@@ -158,7 +158,8 @@ app.get("/", (req, res) => {
             res.send(icsData);
         })
         .catch((error) => {
-            res.send("오류가 발생했습니다:" + error);
+            res.send("오류가 발생했습니다:");
+            console.log("오류가 발생했습니다:" + error);
         });
 });
 
