@@ -9,6 +9,8 @@
   "license": "ISC",
   "description": "",
   "dependencies": {
-    "fs": "^0.0.1-security"
+    "express": "^4.18.3",
+    "fs": "^0.0.1-security",
+    "request": "^2.88.2"
   }
 }
