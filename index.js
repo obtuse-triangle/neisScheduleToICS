@@ -69,7 +69,7 @@ END:VALARM\n`;
     return ics;
 }
 
-function getSchoolSchedule() {
+var getSchoolSchedule = new Promise((resolve, reject) => {
     const optionForSchedule = {
         uri: `https://open.neis.go.kr/hub/SchoolSchedule`,
         qs: {
@@ -87,18 +87,19 @@ function getSchoolSchedule() {
     get(optionForSchedule, (err, res, body) => {
         if (err) {
             console.log(err);
-            return;
+            reject(err);
         }
         const jsonData = JSON.parse(body);
-        return jsonData;
+        resolve(jsonData);
     });
-}
+});
 
-const jsonData = getSchoolSchedule();
-
-// JSON 데이터를 ICS로 변환
-const icsData = convertToICS(jsonData);
-
-// 변환된 ICS를 파일로 저장
-fs.writeFileSync("events.ics", icsData, "utf8");
-console.log("ICS 파일이 생성되었습니다.");
+getSchoolSchedule
+    .then((jsonData) => {
+        const icsData = convertToICS(jsonData);
+        fs.writeFileSync("events.ics", icsData, "utf8");
+        console.log("ICS 파일이 생성되었습니다.");
+    })
+    .catch((error) => {
+        console.error("오류가 발생했습니다:", error);
+    });
