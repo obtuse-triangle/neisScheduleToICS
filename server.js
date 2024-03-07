@@ -120,7 +120,7 @@ function ensureDirectoryExistence(filePath) {
     fs.mkdirSync(dirname);
 }
 
-app.get("/", (req, res) => {
+app.get("/school", (req, res) => {
     const ATPT_OFCDC_SC_CODE = req.query.ATPT_OFCDC_SC_CODE;
     const SD_SCHUL_CODE = req.query.SD_SCHUL_CODE;
     if (!ATPT_OFCDC_SC_CODE || !SD_SCHUL_CODE) {
@@ -161,6 +161,11 @@ app.get("/", (req, res) => {
             res.send("오류가 발생했습니다:");
             console.log("오류가 발생했습니다:" + error);
         });
+});
+
+app.get("/bssm.ics", (req, res) => {
+    // redirect to /school?ATPT_OFCDC_SC_CODE=C10&SD_SCHUL_CODE=7150658
+    res.redirect("/school?ATPT_OFCDC_SC_CODE=C10&SD_SCHUL_CODE=7150658");
 });
 
 app.listen(port, () => {
