@@ -57,7 +57,7 @@ X-CREATED-TIME:${new Date().toISOString()}\n`;
                 // ics += `DTEND:${formatDate(endDate)}T000000\n`;
                 ics += `TRANSP:OPAQUE
 X-MICROSOFT-CDO-BUSYSTATUS:BUSY
-CLASS:PRIVATE
+CLASS:PUBlIC
 BEGIN:VALARM
 ACTION:DISPLAY
 DESCRIPTION:${event.EVENT_NM}

@@ -49,7 +49,7 @@ END:VTIMEZONE\n`;
                 // ics += `DTEND:${formatDate(endDate)}T000000\n`;
                 ics += `TRANSP:OPAQUE
 X-MICROSOFT-CDO-BUSYSTATUS:BUSY
-CLASS:PRIVATE
+CLASS:PUBLIC
 BEGIN:VALARM
 ACTION:DISPLAY
 DESCRIPTION:${event.EVENT_NM}
@@ -62,6 +62,7 @@ END:VALARM\n`;
             });
         }
     });
+    ics += `END:VCALENDAR`;
 
     return ics;
 }
