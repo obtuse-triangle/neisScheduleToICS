@@ -120,7 +120,7 @@ function ensureDirectoryExistence(filePath) {
     fs.mkdirSync(dirname);
 }
 
-app.get("/api/calendar/school", (req, res) => {
+app.get("/", (req, res) => {
     const ATPT_OFCDC_SC_CODE = req.query.ATPT_OFCDC_SC_CODE;
     const SD_SCHUL_CODE = req.query.SD_SCHUL_CODE;
     if (!ATPT_OFCDC_SC_CODE || !SD_SCHUL_CODE) {
