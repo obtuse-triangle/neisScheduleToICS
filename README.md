@@ -18,6 +18,13 @@ Service URL(부산소프트웨어마이스터고등학교) : [https://obtuse.kr/
 -   index.js : 나이스 api 호출
 -   server.js : api 서버로 작동하는 코드
 
+### 작동 테스트
+- 애플 캘린더 : ✅
+- 구글 캘린더 : ✅
+- 아웃룩 : ❌ 
+- 네이버 캘린더 : ❌
+- Notion Calendar : ❌
+
 ## simple.js 사용법
 
 -   나이스 학사일정 api를 이용해 학사일정을 json형식으로 가져옵니다.
