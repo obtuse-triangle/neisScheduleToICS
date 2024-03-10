@@ -1,11 +1,10 @@
-const fs = require("fs");
-const request = require("request");
-const { get } = request;
-const config = require("./config.json");
-const express = require("express");
+import fs from "fs";
+import fetch from "node-fetch";
+import config from "./config.json" assert { "type": "json" };
+import express from "express";
 const app = express();
 const port = 3007;
-const path = require("path");
+import path from "path";
 
 // "YYYYMMDD" 형식의 문자열을 Date 객체로 변환하는 함수
 function parseDate(dateString) {
@@ -76,28 +75,42 @@ END:VALARM\n`;
 
 var getSchoolSchedule = (ATPT_OFCDC_SC_CODE, SD_SCHUL_CODE) => {
     return new Promise((resolve, reject) => {
-        const optionForSchedule = {
-            uri: `https://open.neis.go.kr/hub/SchoolSchedule`,
-            qs: {
-                KEY: config.neisKey,
-                Type: "json",
-                ATPT_OFCDC_SC_CODE: ATPT_OFCDC_SC_CODE,
-                SD_SCHUL_CODE: SD_SCHUL_CODE,
-                // AA_YMD: new Date().toISOString().slice(0, 10).replace(/-/g, ""),
-                // AA_YMD: 20240304,
-                MLSV_FROM_YMD: new Date().toISOString().slice(0, 4).replace(/-/g) + "0101",
-                MLSV_TO_YMD: String(Number(new Date().toISOString().slice(0, 4).replace(/-/g)) + 1) + "0101",
-                pSize: 1000,
-            },
-        };
-        get(optionForSchedule, (err, res, body) => {
-            if (err) {
-                console.log(err);
-                reject(err);
+        // const optionForSchedule = {
+        //     uri: `https://open.neis.go.kr/hub/SchoolSchedule`,
+        //     qs: {
+        //         KEY: config.neisKey,
+        //         Type: "json",
+        //         ATPT_OFCDC_SC_CODE: ATPT_OFCDC_SC_CODE,
+        //         SD_SCHUL_CODE: SD_SCHUL_CODE,
+        //         // AA_YMD: new Date().toISOString().slice(0, 10).replace(/-/g, ""),
+        //         // AA_YMD: 20240304,
+        //         MLSV_FROM_YMD: new Date().toISOString().slice(0, 4).replace(/-/g) + "0101",
+        //         MLSV_TO_YMD: String(Number(new Date().toISOString().slice(0, 4).replace(/-/g)) + 1) + "0101",
+        //         pSize: 1000,
+        //     },
+        // };
+        // get(optionForSchedule, (err, res, body) => {
+        //     if (err) {
+        //         console.log(err);
+        //         reject(err);
+        //     }
+        //     // console.log(body);
+        //     const jsonData = JSON.parse(body);
+        //     resolve(jsonData);
+        // });
+        // change to fetch
+        fetch(
+            `https://open.neis.go.kr/hub/SchoolSchedule?KEY=${config.neisKey}&Type=json&ATPT_OFCDC_SC_CODE=${ATPT_OFCDC_SC_CODE}&SD_SCHUL_CODE=${SD_SCHUL_CODE}&MLSV_FROM_YMD=${
+                new Date().toISOString().slice(0, 4).replace(/-/g) + "0101"
+            }&MLSV_TO_YMD=${String(Number(new Date().toISOString().slice(0, 4).replace(/-/g)) + 1) + "0101"}&pSize=1000`
+        ).then((res) => {
+            if (res.ok) {
+                res.json().then((jsonData) => {
+                    resolve(jsonData);
+                });
+            } else {
+                reject(res.statusText);
             }
-            // console.log(body);
-            const jsonData = JSON.parse(body);
-            resolve(jsonData);
         });
     });
 };

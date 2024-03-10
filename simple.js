@@ -1,4 +1,4 @@
-const fs = require("fs");
+import fs from "fs";
 
 // "YYYYMMDD" 형식의 문자열을 Date 객체로 변환하는 함수
 function parseDate(dateString) {
