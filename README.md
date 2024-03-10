@@ -24,6 +24,7 @@ Service URL(부산소프트웨어마이스터고등학교) : [https://obtuse.kr/
 - 아웃룩 : ❌ (ics파일을 직접 업로드하면 일정 제목이 표시되지 않고 작동함, 웹으로 구독은 작동하지 않음)
 - 네이버 캘린더 : ❌
 - Notion Calendar : ✅(구글 캘린더와 api연결, Notion Calendar연동)
+
 (다른 캘린더에서도 작동하지 않는다면 Issue 등록해주시면 감사하겠습니다.)
 (해결해서 Pull Requst 보내주시면 더 감사하겠습니다.)
 
