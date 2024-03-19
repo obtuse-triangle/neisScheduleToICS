@@ -141,6 +141,10 @@ function ensureDirectoryExistence(filePath) {
 }
 
 app.get("/school", (req, res) => {
+    if (req.query.ATPT_OFCDC_SC_CODE == undefined || req.query.SD_SCHUL_CODE == undefined) {
+        res.send("시도교육청 코드와 학교 코드를 입력해주세요. 예) /school?ATPT_OFCDC_SC_CODE=C10&SD_SCHUL_CODE=7150658");
+        return;
+    }
     const ATPT_OFCDC_SC_CODE = req.query.ATPT_OFCDC_SC_CODE.replace(/[^a-zA-Z0-9]/g, "");
     const SD_SCHUL_CODE = req.query.SD_SCHUL_CODE.replace(/[^0-9]/g, "");
     if (!ATPT_OFCDC_SC_CODE || !SD_SCHUL_CODE) {
