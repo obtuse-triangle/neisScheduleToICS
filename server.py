@@ -14,11 +14,11 @@ app = FastAPI()
 templates = Jinja2Templates(directory="templates")
 
 # Load config
-with open("data/config.json", "r") as f:
+with open("config.json", "r") as f:
   config = json.load(f)
 
 # Load school data
-with open("학교기본정보2024_11_30.csv", "r", encoding='cp949') as f:
+with open("data/학교기본정보2024_11_30.csv", "r", encoding='cp949') as f:
   school_data = pd.read_csv(f)
   print(school_data.info())
 # Helper functions
