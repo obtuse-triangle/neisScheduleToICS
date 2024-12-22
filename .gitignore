@@ -133,3 +133,6 @@ events.ics
 config.json
 
 cache
+
+*.pyc
+__pycache__/
