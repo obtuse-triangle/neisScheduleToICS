@@ -7,6 +7,7 @@
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@picocss/pico@2/css/pico.min.css" />
     <script src="https://cdn.tailwindcss.com"></script>
     <script>
+      // Keep tailwind config separate as it's not standard JS
       tailwind.config = {
         corePlugins: {
           preflight: false,
@@ -14,6 +15,7 @@
       };
     </script>
     <style>
+      /* Styles can also be moved to a separate CSS file in static/ */
       ol {
         list-style: none;
         margin: 0;
@@ -59,11 +61,11 @@
   <body>
     <main class="container">
       <h1>나이스 학사일정 캘린더 변환기</h1>
-      <form class="border-[1px] border-white">
+      <form>
         <fieldset class="grid">
           <label for="ATPT_OFCDC_SC_CODE"
-            >시도교육청 코드
-            <select name="ATPT_OFCDC_SC_CODE" id="ATPT_OFCDC_SC_CODE">
+            >시도교육청
+            <select name="ATPT_OFCDC_SC_CODE" id="ATPT_OFCDC_SC_CODE" required>
               <option value="B10">서울특별시교육청</option>
               <option value="C10">부산광역시교육청</option>
               <option value="D10">대구광역시교육청</option>
@@ -86,58 +88,14 @@
           </label>
           <label for="SCHUL_NM"
             >학교명
-            <input type="text" name="SCHUL_NM" id="SCHUL_NM" />
+            <input type="text" name="SCHUL_NM" id="SCHUL_NM" placeholder="예: 소프트웨어마이스터고" required/>
           </label>
-          <label for="">
+          <label>
             &nbsp;
             <button class="block mt-1" type="submit">검색</button>
           </label>
         </fieldset>
       </form>
-      <script>
-        document.querySelector("form").addEventListener("submit", (e) => {
-          e.preventDefault();
-          const ATPT_OFCDC_SC_CODE = e.target.ATPT_OFCDC_SC_CODE.value;
-          const SCHUL_NM = e.target.SCHUL_NM.value;
-          console.log(ATPT_OFCDC_SC_CODE, SCHUL_NM);
-
-          document.querySelector("table").hidden = false;
-
-          fetch("./search", {
-            method: "POST",
-            headers: {
-              "Content-Type": "application/json",
-            },
-            body: JSON.stringify({ ATPT_OFCDC_SC_CODE: ATPT_OFCDC_SC_CODE, SCHUL_NM: SCHUL_NM }),
-          })
-            .then((res) => res.json())
-            .then((data) => {
-              const tbody = document.querySelector("tbody");
-              tbody.innerHTML = ""; // Clear previous results
-              data.forEach((school) => {
-                const tr = document.createElement("tr");
-                tr.innerHTML = `
-                  <td>${school["학교명"]}</td>
-                  <td>${school["시도교육청코드"]}</td>
-                  <td>${school["행정표준코드"]}</td>
-                  <td>${school["도로명주소"]}</td>
-                  <td><button onclick="openPopup('${school["시도교육청코드"]}', '${school["행정표준코드"]}')">추가</button></td>
-                `;
-                tbody.appendChild(tr);
-              });
-            });
-        });
-
-        function openPopup(ATPT_OFCDC_SC_CODE, SD_SCHUL_CODE) {
-          window.location.href = `webcal://obtuse.kr/api/calendar/school?ATPT_OFCDC_SC_CODE=${ATPT_OFCDC_SC_CODE}&SD_SCHUL_CODE=${SD_SCHUL_CODE}`;
-          const popup1 = document.querySelector(".popup1");
-          popup1.style.opacity = 1;
-          popup1.style.pointerEvents = "auto";
-          popup1.querySelector(
-            "code"
-          ).innerText = `https://obtuse.kr/api/calendar/school?ATPT_OFCDC_SC_CODE=${ATPT_OFCDC_SC_CODE}&SD_SCHUL_CODE=${SD_SCHUL_CODE}`;
-        }
-      </script>
 
       <table class="striped" hidden>
         <thead>
@@ -146,7 +104,7 @@
             <th scope="col">시도교육청코드</th>
             <th scope="col">행정표준코드</th>
             <th scope="col">도로명주소</th>
-            <th scope="col"></th>
+            <th scope="col">캘린더 추가</th>
           </tr>
         </thead>
         <tbody></tbody>
@@ -158,34 +116,29 @@
     >
       <div class="container bg-[var(--pico-background-color)] p-8 rounded-xl m-auto">
         <h2>자동으로 캘린더가 추가되지 않나요?</h2>
-        <p class="mt-[-8px]">아래 지침을 따라서 수동으로 선호하는 캘린더앱에 추가해보세요</p>
+        <p class="mt-[-8px]">아래 지침을 따라서 수동으로 선호하는 캘린더앱에 추가해보세요.</p>
         <code
-          >https://obtuse.kr/api/calendar/school?ATPT_OFCDC_SC_CODE=C10&SD_SCHUL_CODE=7150658</code
+          >https://example.com/api/calendar/school?ATPT_OFCDC_SC_CODE=C10&SD_SCHUL_CODE=7150658</code
         >
         <ol class="numbered">
           <li>위 링크를 복사합니다.</li>
-          <li>캘린더 앱을 연 후, 구독 캘린더 추가 매뉴로 이동합니다.</li>
+          <li>캘린더 앱을 연 후, 구독 캘린더 추가 메뉴로 이동합니다.</li>
           <li>복사한 링크를 붙여넣고 추가합니다.</li>
         </ol>
-        <h3>참고해 보세요</h3>
+        <h3>참고 자료</h3>
         <a href="https://support.apple.com/ko-kr/102301" target="_blank"
-          >iCloud 캘린더 구독 사용하기(Apple)</a
+          >iCloud 캘린더 구독 사용하기 (Apple)</a
         >
         <br />
         <a
-          href="https://support.google.com/calendar/answer/37100?hl=ko&co=GENIE.Platform%3DDesktop"
+          href="https://support.google.com/calendar/answer/37100?hl=ko"
           target="_blank"
-          >링크를 사용하여 공개 캘린더 추가하기(Google Calendar)</a
+          >링크를 사용하여 공개 캘린더 추가하기 (Google)</a
         >
       </div>
-      <script>
-        document.querySelector(".popup1").addEventListener("click", (e) => {
-          if (e.target === e.currentTarget) {
-            document.querySelector(".popup1").style.opacity = 0;
-            document.querySelector(".popup1").style.pointerEvents = "none";
-          }
-        });
-      </script>
     </div>
+
+    <!-- Load the external script -->
+    <script src="/static/script.js"></script>
   </body>
 </html>
