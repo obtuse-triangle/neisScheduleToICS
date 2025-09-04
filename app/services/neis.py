@@ -35,17 +35,29 @@ async def get_school_schedule(ATPT_OFCDC_SC_CODE: str, SD_SCHUL_CODE: int) -> di
     print(f"Requesting NEIS API URL: {url}")
 
     try:
-        response = requests.get(url, timeout=5) # 5초 타임아웃 설정
-        response.raise_for_status()  # 4xx, 5xx 에러 발생 시 예외 발생
-        return response.json()
+        response = requests.get(url, timeout=10) # 타임아웃 10초로 증가
+        response.raise_for_status()
+        json_data = response.json()
+
+        # NEIS API는 200 OK와 함께 에러 코드를 반환할 수 있음
+        if "RESULT" in json_data:
+            result_code = json_data["RESULT"]["CODE"]
+            if result_code != "INFO-000":
+                raise HTTPException(
+                    status_code=400, # 클라이언트 요청이 잘못되었을 가능성이 높음 (e.g., 잘못된 학교 코드)
+                    detail=f"NEIS API Error: {json_data['RESULT']['MESSAGE']} (Code: {result_code})"
+                )
+
+        return json_data
+
     except requests.exceptions.HTTPError as e:
-        # API 서버에서 반환한 에러 (e.g., 400, 401, 500)
+        # 4xx, 5xx 에러
         raise HTTPException(
-            status_code=response.status_code,
-            detail=f"Error from NEIS server: {e}"
+            status_code=e.response.status_code,
+            detail=f"HTTP Error from NEIS server: {e}"
         )
     except requests.exceptions.RequestException as e:
-        # 네트워크 연결 문제, 타임아웃 등
+        # 연결 시간 초과, DNS 문제 등
         raise HTTPException(
             status_code=503,
             detail=f"Could not connect to NEIS server: {e}"

@@ -1,12 +1,12 @@
-from datetime import datetime
+from datetime import datetime, timezone
 from app.utils.date_utils import parse_date, format_date
 
 def convert_to_ics(data: dict, school_name: str) -> str:
     """
     NEIS API 응답 데이터를 ICS 형식의 문자열로 변환합니다.
     """
-    today = datetime.utcnow().strftime('%Y%m%dT%H%M%SZ')
-    # school_name = data['SchoolSchedule'][1]['row'][0]['SCHUL_NM']
+    now_utc = datetime.now(timezone.utc)
+    today = now_utc.strftime('%Y%m%dT%H%M%SZ')
 
     ics = f"""BEGIN:VCALENDAR
 VERSION:2.0
@@ -25,7 +25,7 @@ TZOFFSETFROM:+0900
 TZOFFSETTO:+0900
 END:STANDARD
 END:VTIMEZONE
-X-CREATED-TIME:{datetime.utcnow().isoformat()}Z\n"""
+X-CREATED-TIME:{now_utc.isoformat().replace('+00:00', 'Z')}\n"""
 
     if 'SchoolSchedule' in data:
         for item in data['SchoolSchedule']:

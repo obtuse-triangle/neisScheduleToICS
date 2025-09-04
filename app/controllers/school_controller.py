@@ -5,7 +5,7 @@ from app.models.school import SchoolSearch
 from app.services.neis import get_school_schedule
 from app.services.ics_converter import convert_to_ics
 from app.services.school_search import school_search_service
-from app.services.cache_service import cache_service # 새로 추가
+from app.services.cache_service import cache_service
 
 async def search_school(school_search: SchoolSearch) -> JSONResponse:
     """
@@ -49,7 +49,7 @@ async def get_school_calendar(atpt_ofcdc_sc_code: str, sd_schul_code: int) -> Fi
     # NEIS API에서 학사일정 데이터 가져오기
     json_data = await get_school_schedule(atpt_ofcdc_sc_code, sd_schul_code)
 
-    # NEIS API가 데이터 없음을 반환하는 경우 처리
+    # NEIS API가 데이터 없음을 반환하는 경우 처리 ("INFO-200"은 데이터 없음을 의미)
     if "RESULT" in json_data and json_data["RESULT"]["CODE"] == "INFO-200":
         raise HTTPException(status_code=404, detail="No schedule data found for the given school on NEIS.")
 

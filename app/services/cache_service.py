@@ -1,6 +1,6 @@
 import os
 import re
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from pathlib import Path
 from typing import Optional
 
@@ -20,10 +20,11 @@ class CacheService:
         """캐시 키에 해당하는 파일 경로를 생성합니다."""
         return self.base_dir / atpt_code / f"{school_code}.ics"
 
-    def get(self, atpt_code: str, school_code: int) -> Optional[Path]:
+    def get(self, atpt_code: str, school_code: int, now_func=lambda: datetime.now(timezone.utc)) -> Optional[Path]:
         """
         유효한 캐시 항목을 확인하고, 존재할 경우 파일 경로를 반환합니다.
         캐시가 없거나 만료된 경우 None을 반환합니다.
+        테스트를 위해 현재 시간을 주입할 수 있도록 now_func 파라미터를 추가합니다.
         """
         file_path = self._get_file_path(atpt_code, school_code)
 
@@ -43,7 +44,8 @@ class CacheService:
             created_time = datetime.fromisoformat(created_time_str)
 
             # 현재 시간과 비교하여 캐시 유효 기간을 확인합니다.
-            if datetime.utcnow() - created_time < self.duration:
+            now = now_func().replace(tzinfo=None) # Naive datetime으로 비교
+            if now - created_time < self.duration:
                 print(f"Cache hit for {atpt_code}/{school_code}.")
                 return file_path
             else:

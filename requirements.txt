@@ -5,3 +5,7 @@ requests
 pandas
 pydantic
 jinja2
+pytest
+pytest-asyncio
+pytest-mock
+respx
