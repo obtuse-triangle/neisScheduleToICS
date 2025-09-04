@@ -20,3 +20,7 @@ app.mount("/static", StaticFiles(directory="static"), name="static")
 app.include_router(root_router.router)
 app.include_router(school_router.router)
 app.include_router(search_router.router)
+
+# 참고: 이제 이 파일에는 더 이상 @app.get, @app.post와 같은
+# 개별 엔드포인트 데코레이터가 존재하지 않습니다.
+# 모든 라우팅 로직은 app/routers/ 디렉토리에서 관리됩니다.

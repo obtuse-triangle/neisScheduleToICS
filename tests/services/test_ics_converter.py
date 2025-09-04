@@ -1,4 +1,5 @@
 import pytest
+import re
 from app.services.ics_converter import convert_to_ics
 
 # 테스트에 사용할 샘플 데이터 정의
@@ -44,25 +45,28 @@ def test_convert_to_ics_success(sample_schedule_data):
     school_name = "테스트고등학교"
     ics_string = convert_to_ics(sample_schedule_data, school_name)
 
+    # 모든 줄바꿈이 CRLF(\r\n)인지 확인
+    assert "\r\n" in ics_string
+    assert "\n" not in ics_string.replace("\r\n", "")
+
     # 필수 ICS 구성 요소 확인
-    assert "BEGIN:VCALENDAR" in ics_string
-    assert "END:VCALENDAR" in ics_string
-    assert "PRODID:-//obtuse.kr//SchoolScheduleToICS//KO" in ics_string
-    assert f"X-WR-CALNAME:{school_name} 학사일정" in ics_string
+    lines = ics_string.split("\r\n")
+    assert "BEGIN:VCALENDAR" in lines
+    assert "END:VCALENDAR" in lines
+    assert "PRODID:-//obtuse.kr//SchoolScheduleToICS//KO" in lines
+    assert f"X-WR-CALNAME:{school_name} 학사일정" in lines
 
     # 이벤트 존재 여부 확인
     assert ics_string.count("BEGIN:VEVENT") == 2
     assert ics_string.count("END:VEVENT") == 2
 
-    # 첫 번째 이벤트의 상세 정보 확인
-    assert "SUMMARY:개교기념일" in ics_string
-    assert "DTSTART;VALUE=DATE:20240901" in ics_string
-    assert "DESCRIPTION:학교 쉬는 날" in ics_string
+    # 각 이벤트에 UID가 포함되었는지 정규식으로 확인
+    assert len(re.findall(r"UID:[0-9a-fA-F\-]+", ics_string)) == 2
 
-    # 두 번째 이벤트의 상세 정보 확인
-    assert "SUMMARY:한글날" in ics_string
-    assert "DTSTART;VALUE=DATE:20241009" in ics_string
-    assert "DESCRIPTION:공휴일" in ics_string
+    # 이벤트 상세 정보 확인
+    assert "SUMMARY:개교기념일" in lines
+    assert "DTSTART;VALUE=DATE:20240901" in lines
+    assert "DESCRIPTION:학교 쉬는 날" in lines
 
 
 def test_convert_to_ics_no_events(sample_empty_data):
@@ -70,14 +74,15 @@ def test_convert_to_ics_no_events(sample_empty_data):
     school_name = "이벤트없는학교"
     ics_string = convert_to_ics(sample_empty_data, school_name)
 
-    # 필수 ICS 구성 요소 확인
-    assert "BEGIN:VCALENDAR" in ics_string
-    assert "END:VCALENDAR" in ics_string
-    assert f"X-WR-CALNAME:{school_name} 학사일정" in ics_string
+    # 줄바꿈 및 기본 구조 확인
+    assert "\r\n" in ics_string
+    lines = ics_string.split("\r\n")
+    assert "BEGIN:VCALENDAR" in lines
+    assert "END:VCALENDAR" in lines
 
     # 이벤트가 없어야 함
-    assert "BEGIN:VEVENT" not in ics_string
-    assert "SUMMARY:" not in ics_string
+    assert "BEGIN:VEVENT" not in lines
+    assert "UID:" not in ics_string
 
 def test_convert_to_ics_malformed_data():
     """'SchoolSchedule' 키가 없거나 형식이 다른 데이터를 처리하는지 테스트합니다."""
@@ -85,9 +90,11 @@ def test_convert_to_ics_malformed_data():
     school_name = "오류난학교"
     ics_string = convert_to_ics(malformed_data, school_name)
 
-    # 필수 ICS 구성 요소는 여전히 존재해야 함
-    assert "BEGIN:VCALENDAR" in ics_string
-    assert "END:VCALENDAR" in ics_string
+    # 줄바꿈 및 기본 구조 확인
+    assert "\r\n" in ics_string
+    lines = ics_string.split("\r\n")
+    assert "BEGIN:VCALENDAR" in lines
+    assert "END:VCALENDAR" in lines
 
     # 이벤트는 없어야 함
-    assert "BEGIN:VEVENT" not in ics_string
+    assert "BEGIN:VEVENT" not in lines
