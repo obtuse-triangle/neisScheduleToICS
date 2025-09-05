@@ -65,7 +65,7 @@ def test_convert_to_ics_with_icalendar_lib(sample_schedule_data):
 
 @pytest.fixture
 def consecutive_schedule_data():
-    """Mock data with consecutive events to test grouping."""
+    """Mock data with consecutive events and a Saturday holiday to test grouping and filtering."""
     return {
         "SchoolSchedule": [
             {
@@ -73,6 +73,8 @@ def consecutive_schedule_data():
                     # This should be a single event
                     {"SCHUL_NM": "테스트고등학교", "AA_YMD": "20240425", "EVENT_NM": "중간고사", "EVENT_CNTNT": "1일차"},
                     {"SCHUL_NM": "테스트고등학교", "AA_YMD": "20240426", "EVENT_NM": "중간고사", "EVENT_CNTNT": "2일차"},
+                    # This should be filtered out
+                    {"SCHUL_NM": "테스트고등학교", "AA_YMD": "20240427", "EVENT_NM": "토요휴업일", "EVENT_CNTNT": ""},
                     # This is a separate event
                     {"SCHUL_NM": "테스트고등학교", "AA_YMD": "20240505", "EVENT_NM": "어린이날", "EVENT_CNTNT": "공휴일"},
                     # This should be another single event, non-consecutive
@@ -82,8 +84,8 @@ def consecutive_schedule_data():
         ]
     }
 
-def test_convert_to_ics_groups_consecutive_events(consecutive_schedule_data):
-    """Tests if consecutive events with the same name are grouped into a single event."""
+def test_convert_to_ics_groups_and_filters_events(consecutive_schedule_data):
+    """Tests if events are grouped correctly and unwanted events are filtered out."""
     school_name = "테스트고등학교"
     ics_string = convert_to_ics(consecutive_schedule_data, school_name)
     cal = Calendar.from_ical(ics_string)
@@ -91,7 +93,12 @@ def test_convert_to_ics_groups_consecutive_events(consecutive_schedule_data):
     events = sorted(list(cal.walk('vevent')), key=lambda e: e['dtstart'].to_ical())
 
     # 3 events should be created: 중간고사 (2-day), 어린이날 (1-day), 중간고사 (1-day)
+    # "토요휴업일" should be filtered out.
     assert len(events) == 3
+
+    # Also check that no "토요휴업일" event exists
+    saturday_events = [e for e in events if e['summary'] == '토요휴업일']
+    assert len(saturday_events) == 0
 
     # 1. Check the merged "중간고사" event
     midterm_event1 = events[0]
