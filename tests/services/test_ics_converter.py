@@ -63,6 +63,54 @@ def test_convert_to_ics_with_icalendar_lib(sample_schedule_data):
     # 원본 문자열에서 이스케이프 처리된 것을 직접 확인할 수도 있습니다.
     assert "SUMMARY:한글날\\, 공휴일" in ics_string
 
+@pytest.fixture
+def consecutive_schedule_data():
+    """Mock data with consecutive events to test grouping."""
+    return {
+        "SchoolSchedule": [
+            {
+                "row": [
+                    # This should be a single event
+                    {"SCHUL_NM": "테스트고등학교", "AA_YMD": "20240425", "EVENT_NM": "중간고사", "EVENT_CNTNT": "1일차"},
+                    {"SCHUL_NM": "테스트고등학교", "AA_YMD": "20240426", "EVENT_NM": "중간고사", "EVENT_CNTNT": "2일차"},
+                    # This is a separate event
+                    {"SCHUL_NM": "테스트고등학교", "AA_YMD": "20240505", "EVENT_NM": "어린이날", "EVENT_CNTNT": "공휴일"},
+                    # This should be another single event, non-consecutive
+                    {"SCHUL_NM": "테스트고등학교", "AA_YMD": "20240428", "EVENT_NM": "중간고사", "EVENT_CNTNT": "3일차"},
+                ]
+            }
+        ]
+    }
+
+def test_convert_to_ics_groups_consecutive_events(consecutive_schedule_data):
+    """Tests if consecutive events with the same name are grouped into a single event."""
+    school_name = "테스트고등학교"
+    ics_string = convert_to_ics(consecutive_schedule_data, school_name)
+    cal = Calendar.from_ical(ics_string)
+
+    events = sorted(list(cal.walk('vevent')), key=lambda e: e['dtstart'].to_ical())
+
+    # 3 events should be created: 중간고사 (2-day), 어린이날 (1-day), 중간고사 (1-day)
+    assert len(events) == 3
+
+    # 1. Check the merged "중간고사" event
+    midterm_event1 = events[0]
+    assert midterm_event1['summary'] == "중간고사"
+    assert midterm_event1['dtstart'].to_ical() == b'20240425'
+    assert midterm_event1['dtend'].to_ical() == b'20240427' # end date is exclusive
+
+    # 2. Check the non-consecutive "중간고사" event
+    midterm_event2 = events[1]
+    assert midterm_event2['summary'] == "중간고사"
+    assert midterm_event2['dtstart'].to_ical() == b'20240428'
+    assert 'dtend' not in midterm_event2 # single day event should not have dtend
+
+    # 3. Check the "어린이날" event
+    holiday_event = events[2]
+    assert holiday_event['summary'] == "어린이날"
+    assert holiday_event['dtstart'].to_ical() == b'20240505'
+    assert 'dtend' not in holiday_event
+
 def test_convert_to_ics_empty_data():
     """
     이벤트 데이터가 없을 때도 비어있는 유효한 캘린더를 생성하는지 테스트합니다.
