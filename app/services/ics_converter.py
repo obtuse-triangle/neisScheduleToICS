@@ -77,7 +77,13 @@ def convert_to_ics(data: dict, school_name: str) -> str:
             if 'row' in item:
                 all_event_rows.extend(item.get('row', []))
 
-        merged_events = _group_consecutive_events(all_event_rows)
+        # "토요휴업일" 이벤트 필터링
+        filtered_events = [
+            event for event in all_event_rows
+            if event.get('EVENT_NM') != '토요휴업일'
+        ]
+
+        merged_events = _group_consecutive_events(filtered_events)
 
         for merged_event in merged_events:
             event = Event()
