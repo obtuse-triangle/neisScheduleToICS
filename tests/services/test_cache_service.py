@@ -22,7 +22,8 @@ def test_cache_set_and_get_hit(cache_service):
     """캐시에 데이터를 저장하고, 유효한 기간 내에 성공적으로 가져오는지 테스트합니다."""
     # 현재 시간으로 ICS 콘텐츠 생성
     now_utc = datetime.now(timezone.utc)
-    content = TEST_ICS_CONTENT_TEMPLATE.format(now_utc.isoformat().replace('+00:00', 'Z'))
+    # icalendar 라이브러리가 생성하는 실제 포맷(isoformat)으로 변경
+    content = TEST_ICS_CONTENT_TEMPLATE.format(now_utc.isoformat())
 
     # 1. 캐시 설정
     cache_path = cache_service.set(TEST_ATPT_CODE, TEST_SCHOOL_CODE, content)
@@ -49,7 +50,7 @@ def test_cache_get_expired(cache_service):
     eight_days_ago = fake_now - timedelta(days=8)
 
     # 1. 8일 전의 시간으로 캐시 파일을 생성합니다.
-    expired_content = TEST_ICS_CONTENT_TEMPLATE.format(eight_days_ago.isoformat().replace('+00:00', 'Z'))
+    expired_content = TEST_ICS_CONTENT_TEMPLATE.format(eight_days_ago.isoformat())
     cache_service.set(TEST_ATPT_CODE, TEST_SCHOOL_CODE, expired_content)
 
     # --- 실행 (Act) ---

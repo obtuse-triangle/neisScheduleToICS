@@ -33,19 +33,19 @@ class CacheService:
 
         try:
             content = file_path.read_text(encoding="utf8")
-            # ICS 파일에서 생성 시간을 파싱합니다.
-            match = re.search(r'X-CREATED-TIME:([\d\-T:.\d]+)Z', content)
+            # icalendar 라이브러리가 생성하는 실제 포맷(YYYY-MM-DD HH:MM:SS.ffffff+zz:zz)을 파싱합니다.
+            match = re.search(r'X-CREATED-TIME:(.+)', content)
 
             if not match:
-                # 타임스탬프가 없으면 유효하지 않은 캐시로 간주합니다.
                 return None
 
-            created_time_str = match.group(1).split('.')[0]
-            created_time = datetime.fromisoformat(created_time_str)
+            created_time_str = match.group(1).strip()
+            # fromisoformat는 이 포맷을 직접 처리할 수 있습니다.
+            created_time_aware = datetime.fromisoformat(created_time_str)
 
-            # 현재 시간과 비교하여 캐시 유효 기간을 확인합니다.
-            now = now_func().replace(tzinfo=None) # Naive datetime으로 비교
-            if now - created_time < self.duration:
+            # UTC 기준으로 비교하기 위해 모든 시간을 aware datetime으로 통일합니다.
+            now_aware = now_func()
+            if now_aware - created_time_aware < self.duration:
                 print(f"Cache hit for {atpt_code}/{school_code}.")
                 return file_path
             else:
