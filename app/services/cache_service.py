@@ -34,14 +34,16 @@ class CacheService:
         try:
             content = file_path.read_text(encoding="utf8")
             # ICS 파일에서 생성 시간을 파싱합니다.
-            match = re.search(r'X-CREATED-TIME:([\d\-T:.\d]+)Z', content)
+            # icalendar 라이브러리는 YYYYMMDDTHHMMSSZ 형식을 사용합니다.
+            match = re.search(r'X-CREATED-TIME:(\d{8}T\d{6}Z)', content)
 
             if not match:
                 # 타임스탬프가 없으면 유효하지 않은 캐시로 간주합니다.
                 return None
 
-            created_time_str = match.group(1).split('.')[0]
-            created_time = datetime.fromisoformat(created_time_str)
+            created_time_str = match.group(1)
+            # fromisoformat 대신 strptime을 사용하여 Z 접미사를 처리합니다.
+            created_time = datetime.strptime(created_time_str, '%Y%m%dT%H%M%SZ')
 
             # 현재 시간과 비교하여 캐시 유효 기간을 확인합니다.
             now = now_func().replace(tzinfo=None) # Naive datetime으로 비교

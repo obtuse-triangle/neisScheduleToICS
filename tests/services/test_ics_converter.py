@@ -40,6 +40,7 @@ def test_convert_to_ics_with_icalendar_lib(sample_schedule_data):
     # 2. VCALENDAR 속성 확인
     assert cal['prodid'] == '-//obtuse.kr//SchoolScheduleToICS//KO'
     assert cal['X-WR-CALNAME'] == f"{school_name} 학사일정"
+    assert 'X-CREATED-TIME' in cal
 
     # 3. 이벤트 개수 확인
     events = list(cal.walk('vevent'))

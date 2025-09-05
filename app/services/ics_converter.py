@@ -70,6 +70,8 @@ def convert_to_ics(data: dict, school_name: str) -> str:
     cal.add('calscale', 'GREGORIAN')
     cal.add('X-WR-CALNAME', f"{school_name} 학사일정")
     cal.add('X-WR-TIMEZONE', 'Asia/Seoul')
+    # 캐시 확인을 위한 커스텀 생성 시간 속성 추가
+    cal.add('X-CREATED-TIME', datetime.now(timezone.utc))
 
     if 'SchoolSchedule' in data:
         all_event_rows = []
