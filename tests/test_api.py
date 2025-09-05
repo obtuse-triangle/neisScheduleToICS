@@ -1,11 +1,12 @@
 import pytest
 from fastapi.testclient import TestClient
+from pathlib import Path
 
 # 테스트 대상 FastAPI 앱 임포트
 from app.main import app
 
 # 서비스 모킹을 위해 각 서비스 인스턴스를 임포트
-from app.services import school_search, cache_service, neis
+from app.services import school_search, cache_service, neis, ics_converter
 
 @pytest.fixture
 def client():

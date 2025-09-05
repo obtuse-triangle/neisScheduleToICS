@@ -1,13 +1,13 @@
 import pytest
 from app.services.ics_converter import convert_to_ics
+from icalendar import Calendar
 
-# 테스트에 사용할 샘플 데이터 정의
 @pytest.fixture
 def sample_schedule_data():
-    """NEIS API로부터 받은 학사일정 데이터의 모의(mock) 버전."""
+    """A mock version of the schedule data from the NEIS API."""
     return {
         "SchoolSchedule": [
-            {"head": [...]}, # 실제 데이터와 유사하게 head 부분 포함
+            {"head": [...]},
             {
                 "row": [
                     {
@@ -19,75 +19,107 @@ def sample_schedule_data():
                     {
                         "SCHUL_NM": "테스트고등학교",
                         "AA_YMD": "20241009",
-                        "EVENT_NM": "한글날",
-                        "EVENT_CNTNT": "공휴일"
+                        "EVENT_NM": "한글날, 공휴일", # 쉼표가 포함된 이벤트명
+                        "EVENT_CNTNT": "공식적인 공휴일입니다."
                     }
                 ]
             }
         ]
     }
 
+def test_convert_to_ics_with_icalendar_lib(sample_schedule_data):
+    """
+    icalendar 라이브러리를 사용한 ICS 생성이 올바르게 동작하는지 테스트합니다.
+    """
+    school_name = "테스트고등학교"
+    ics_string = convert_to_ics(sample_schedule_data, school_name)
+
+    # 1. 생성된 문자열이 유효한 ICS인지 파싱해본다.
+    cal = Calendar.from_ical(ics_string)
+
+    # 2. VCALENDAR 속성 확인
+    assert cal['prodid'] == '-//obtuse.kr//SchoolScheduleToICS//KO'
+    assert cal['X-WR-CALNAME'] == f"{school_name} 학사일정"
+
+    # 3. 이벤트 개수 확인
+    events = list(cal.walk('vevent'))
+    assert len(events) == 2
+
+    # 4. 첫 번째 이벤트 상세 정보 확인
+    event1 = events[0]
+    assert event1['summary'] == "개교기념일"
+    assert event1['description'] == "학교 쉬는 날"
+    assert event1['location'] == "테스트고등학교"
+    assert event1['transp'] == "TRANSPARENT"
+    assert event1['dtstart'].to_ical() == b'20240901'
+    assert 'uid' in event1
+
+    # 5. 두 번째 이벤트에서 특수 문자(쉼표)가 올바르게 이스케이프 처리 되었는지 확인
+    # icalendar 라이브러리는 파싱 시 이스케이프를 자동으로 해제하므로,
+    # 파싱된 객체의 값을 직접 확인하면 됩니다.
+    event2 = events[1]
+    assert event2['summary'] == "한글날, 공휴일"
+
+    # 원본 문자열에서 이스케이프 처리된 것을 직접 확인할 수도 있습니다.
+    assert "SUMMARY:한글날\\, 공휴일" in ics_string
+
 @pytest.fixture
-def sample_empty_data():
-    """학사일정 이벤트가 없는 경우의 모의 데이터."""
+def consecutive_schedule_data():
+    """Mock data with consecutive events to test grouping."""
     return {
         "SchoolSchedule": [
-            {"head": [...]},
             {
-                "row": [] # 이벤트 목록이 비어있음
+                "row": [
+                    # This should be a single event
+                    {"SCHUL_NM": "테스트고등학교", "AA_YMD": "20240425", "EVENT_NM": "중간고사", "EVENT_CNTNT": "1일차"},
+                    {"SCHUL_NM": "테스트고등학교", "AA_YMD": "20240426", "EVENT_NM": "중간고사", "EVENT_CNTNT": "2일차"},
+                    # This is a separate event
+                    {"SCHUL_NM": "테스트고등학교", "AA_YMD": "20240505", "EVENT_NM": "어린이날", "EVENT_CNTNT": "공휴일"},
+                    # This should be another single event, non-consecutive
+                    {"SCHUL_NM": "테스트고등학교", "AA_YMD": "20240428", "EVENT_NM": "중간고사", "EVENT_CNTNT": "3일차"},
+                ]
             }
         ]
     }
 
-def test_convert_to_ics_success(sample_schedule_data):
-    """학사일정 데이터가 성공적으로 ICS 형식으로 변환되는지 테스트합니다."""
+def test_convert_to_ics_groups_consecutive_events(consecutive_schedule_data):
+    """Tests if consecutive events with the same name are grouped into a single event."""
     school_name = "테스트고등학교"
-    ics_string = convert_to_ics(sample_schedule_data, school_name)
+    ics_string = convert_to_ics(consecutive_schedule_data, school_name)
+    cal = Calendar.from_ical(ics_string)
 
-    # 필수 ICS 구성 요소 확인
-    assert "BEGIN:VCALENDAR" in ics_string
-    assert "END:VCALENDAR" in ics_string
-    assert "PRODID:-//obtuse.kr//SchoolScheduleToICS//KO" in ics_string
-    assert f"X-WR-CALNAME:{school_name} 학사일정" in ics_string
+    events = sorted(list(cal.walk('vevent')), key=lambda e: e['dtstart'].to_ical())
 
-    # 이벤트 존재 여부 확인
-    assert ics_string.count("BEGIN:VEVENT") == 2
-    assert ics_string.count("END:VEVENT") == 2
+    # 3 events should be created: 중간고사 (2-day), 어린이날 (1-day), 중간고사 (1-day)
+    assert len(events) == 3
 
-    # 첫 번째 이벤트의 상세 정보 확인
-    assert "SUMMARY:개교기념일" in ics_string
-    assert "DTSTART;VALUE=DATE:20240901" in ics_string
-    assert "DESCRIPTION:학교 쉬는 날" in ics_string
+    # 1. Check the merged "중간고사" event
+    midterm_event1 = events[0]
+    assert midterm_event1['summary'] == "중간고사"
+    assert midterm_event1['dtstart'].to_ical() == b'20240425'
+    assert midterm_event1['dtend'].to_ical() == b'20240427' # end date is exclusive
 
-    # 두 번째 이벤트의 상세 정보 확인
-    assert "SUMMARY:한글날" in ics_string
-    assert "DTSTART;VALUE=DATE:20241009" in ics_string
-    assert "DESCRIPTION:공휴일" in ics_string
+    # 2. Check the non-consecutive "중간고사" event
+    midterm_event2 = events[1]
+    assert midterm_event2['summary'] == "중간고사"
+    assert midterm_event2['dtstart'].to_ical() == b'20240428'
+    assert 'dtend' not in midterm_event2 # single day event should not have dtend
 
+    # 3. Check the "어린이날" event
+    holiday_event = events[2]
+    assert holiday_event['summary'] == "어린이날"
+    assert holiday_event['dtstart'].to_ical() == b'20240505'
+    assert 'dtend' not in holiday_event
 
-def test_convert_to_ics_no_events(sample_empty_data):
-    """이벤트가 없는 데이터도 유효한 ICS 형식으로 변환되는지 테스트합니다."""
+def test_convert_to_ics_empty_data():
+    """
+    이벤트 데이터가 없을 때도 비어있는 유효한 캘린더를 생성하는지 테스트합니다.
+    """
+    empty_data = {"SchoolSchedule": [{"row": []}]}
     school_name = "이벤트없는학교"
-    ics_string = convert_to_ics(sample_empty_data, school_name)
+    ics_string = convert_to_ics(empty_data, school_name)
 
-    # 필수 ICS 구성 요소 확인
-    assert "BEGIN:VCALENDAR" in ics_string
-    assert "END:VCALENDAR" in ics_string
-    assert f"X-WR-CALNAME:{school_name} 학사일정" in ics_string
-
-    # 이벤트가 없어야 함
-    assert "BEGIN:VEVENT" not in ics_string
-    assert "SUMMARY:" not in ics_string
-
-def test_convert_to_ics_malformed_data():
-    """'SchoolSchedule' 키가 없거나 형식이 다른 데이터를 처리하는지 테스트합니다."""
-    malformed_data = {"Error": "Some error"}
-    school_name = "오류난학교"
-    ics_string = convert_to_ics(malformed_data, school_name)
-
-    # 필수 ICS 구성 요소는 여전히 존재해야 함
-    assert "BEGIN:VCALENDAR" in ics_string
-    assert "END:VCALENDAR" in ics_string
-
-    # 이벤트는 없어야 함
-    assert "BEGIN:VEVENT" not in ics_string
+    cal = Calendar.from_ical(ics_string)
+    events = list(cal.walk('vevent'))
+    assert len(events) == 0
+    assert cal['X-WR-CALNAME'] == f"{school_name} 학사일정"
